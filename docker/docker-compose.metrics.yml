@@ -1,0 +1,29 @@
+﻿# ===========================================================================
+# open-llm-vtuber-enhanced - metrics overlay for `dockprom-enhanced` (folder 14)
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker/docker-compose.metrics.yml \
+#       --profile gpu up
+#
+# This overlay attaches the agent's /metrics endpoint to the dockprom-enhanced
+# Prometheus instance by mounting `docker/prometheus/prometheus.yml` and joining
+# the `dockprom` external network. It does NOT launch a second Prometheus; it
+# only wires the agent into the existing central observability stack.
+# ===========================================================================
+version: "3.9"
+
+services:
+  vtuber-agent:
+    networks:
+      - default
+      - dockprom
+
+  vtuber-agent-gpu:
+    networks:
+      - default
+      - dockprom
+
+networks:
+  dockprom:
+    external: true
+    name: dockprom_default

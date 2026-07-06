@@ -1,0 +1,61 @@
+# ===========================================================================
+# open-llm-vtuber-enhanced — containerized deployment
+# Profiles:
+#   default : the VTuber agent (CPU)
+#   gpu     : agent with NVIDIA GPU passthrough (Whisper/XTTS acceleration)
+#   ollama  : local offline LLM provider
+# ===========================================================================
+version: "3.9"
+
+services:
+  vtuber-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: open-llm-vtuber-enhanced:latest
+    container_name: vtuber-agent
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../config/.env
+    environment:
+      - LOG_LEVEL=INFO
+      - HF_HOME=/app/models
+    volumes:
+      - vtuber_data:/app/data
+      - vtuber_models:/app/models
+      - ../SECOND-KNOWLEDGE-BRAIN.md:/app/SECOND-KNOWLEDGE-BRAIN.md
+    command: ["python", "-m", "agent.main", "serve", "--host", "0.0.0.0", "--port", "8001"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  vtuber-agent-gpu:
+    extends: vtuber-agent
+    container_name: vtuber-agent-gpu
+    profiles: ["gpu"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vtuber-ollama
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - vtuber_ollama_models:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  vtuber_data:
+  vtuber_models:
+  vtuber_ollama_models:

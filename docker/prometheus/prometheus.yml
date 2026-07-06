@@ -1,0 +1,37 @@
+﻿# ===========================================================================
+# open-llm-vtuber-enhanced - Prometheus scrape config
+#
+# Drop-in for the `dockprom-enhanced` (folder 14) stack: this config is mounted
+# into a Prometheus container (or added to dockprom's `prometheus.yml` via a
+# file_sd / additional scrape_configs include) so the VTuber agent's /metrics
+# endpoint joins the central observability dashboard.
+# ===========================================================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: cluster-a
+    project: open-llm-vtuber-enhanced
+
+scrape_configs:
+  - job_name: vtuber-agent
+    metrics_path: /metrics
+    static_configs:
+      # When the agent runs under the same compose network as dockprom, use the
+      # service name `vtuber-agent`. When scraping from the host, use
+      # `localhost:8001` instead.
+      - targets:
+          - vtuber-agent:8001
+        labels:
+          service: vtuber-agent
+          phase: production
+
+  - job_name: vtuber-agent-gpu
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - vtuber-agent-gpu:8001
+        labels:
+          service: vtuber-agent-gpu
+          phase: production
+          profile: gpu

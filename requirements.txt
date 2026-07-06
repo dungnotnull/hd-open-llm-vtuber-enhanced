@@ -1,0 +1,35 @@
+﻿# ===========================================================================
+# open-llm-vtuber-enhanced - pinned dependencies
+# Heavy ML deps are optional at runtime (graceful degradation); pin the core.
+# ===========================================================================
+
+# --- core agent / API ---
+click==8.1.7
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4
+pyyaml==6.0.2
+apscheduler==3.11.0
+websockets==13.1
+
+# --- LLM providers ---
+anthropic==0.42.0
+openai==1.59.0
+
+# --- audio I/O + DSP ---
+sounddevice==0.5.1
+soundfile==0.12.1
+numpy==1.26.4
+librosa==0.10.2.post1
+
+# --- HuggingFace / ML (optional; pipeline degrades gracefully without them) ---
+torch==2.5.1
+transformers==4.47.1
+sentence-transformers==3.3.1
+openai-whisper==20240930
+faster-whisper==1.1.0          # proposal #1 ASR speedup (CTranslate2 backend)
+TTS==0.22.0                    # coqui XTTS-v2 zero-shot voice cloning
+pyannote.audio==3.3.2          # speaker diarization (gated model; needs HF_TOKEN)
+
+# --- tests ---
+pytest==8.3.4

@@ -1,0 +1,97 @@
+﻿# ===========================================================================
+# open-llm-vtuber-enhanced - runtime configuration
+# ===========================================================================
+agent:
+  name: open-llm-vtuber-enhanced
+  cluster: A
+  version: "1.0.0"
+
+server:
+  host: "0.0.0.0"
+  port: 8001
+
+# ----- VTuber persona (drives the dialogue engine) -------------------------
+persona:
+  name: "Aria"
+  description: >
+    A cheerful, curious anime VTuber who loves chatting with viewers, reacts
+    expressively, and remembers regulars across streams. Keeps replies short and
+    spoken-friendly.
+  reference_voice: null        # path to a 6s WAV for XTTS-v2 zero-shot cloning
+
+# ----- audio capture / ingestion -------------------------------------------
+audio:
+  sample_rate: 16000
+  silence_threshold: 0.005
+  min_duration_s: 0.2
+  max_duration_s: 30.0
+
+# ----- ASR / speech understanding ------------------------------------------
+speech:
+  diarization: false           # enable pyannote for multi-speaker rooms (HF_TOKEN required)
+  min_transcript_chars: 1
+  asr_backend: "openai-whisper"   # openai-whisper | faster-whisper (proposal #1)
+  faster_whisper_compute: "int8_float16"  # CTranslate2 compute type
+
+# ----- TTS / avatar synthesis ----------------------------------------------
+tts:
+  language: "en"
+  engine: "xtts_v2"
+
+# ----- LLM reasoning layer --------------------------------------------------
+llm:
+  priority: ["claude", "openai", "ollama"]
+  claude_model: "claude-opus-4-8"
+  openai_model: "gpt-4o"
+  ollama_model: "llama3"
+  max_tokens: 512
+  temperature: 0.8
+
+# ----- HuggingFace models (lazy-loaded via hf_model_manager) ---------------
+hf_models:
+  speech_recognition:  "openai/whisper-large-v3"
+  speaker_diarization: "pyannote/speaker-diarization-3.1"
+  tts_voice_cloning:   "coqui/XTTS-v2"
+  emotion_detection:   "j-hartmann/emotion-english-distilroberta-base"
+  text_embedding:      "BAAI/bge-large-en-v1.5"
+  reranking:           "BAAI/bge-reranker-large"
+  summarization:       "facebook/bart-large-cnn"
+  cache_dir: "./models"
+  idle_unload_seconds: 600
+
+# ----- research-paper crawler ----------------------------------------------
+knowledge_updater:
+  schedule: "daily"            # cluster A is fast-moving (daily 06:00)
+  top_n: 8
+  arxiv_categories: ["cs.CL", "cs.SD", "cs.HC", "eess.AS"]
+  recency_window_days: 90
+
+# ----- persistent memory ----------------------------------------------------
+memory:
+  db_path: "./data/vtuber_memory.db"
+  recall_turns: 10
+
+# ----- frontend bridge (Phase 7) -------------------------------------------
+frontend_bridge:
+  host: "0.0.0.0"
+  port: 8002
+  path: "/vtuber"
+  upstream_ws_url: null         # set to push commands to the upstream backend
+
+# ----- proposal feed (Phase 7) --------------------------------------------
+proposal_feed:
+  dir: "./data/proposal_feed"   # consumed by academic-research-enhanced (folder 18)
+
+# ----- MOS calibration (Phase 7) ------------------------------------------
+mos_calibration:
+  min_samples: 10
+  rater_id: "human"
+  out_path: "./data/mos_calibration.json"
+
+# ----- quality gates (benchmark_runner) ------------------------------------
+quality_gates:
+  max_asr_wer: 0.10
+  min_tts_mos: 4.0
+  max_turn_latency_p95_ms: 1500
+  min_latency_improvement_pct: 5.0
+  min_mos_improvement: 0.1
